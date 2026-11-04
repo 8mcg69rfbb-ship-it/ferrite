@@ -48,6 +48,29 @@ a{color:#EDEAE3}a:hover{color:#FFC400}
 <p style="margin: 0; max-width: 34rem; font-size: 16px; line-height: 1.7; color: #A7AEB8">Before the cloud, computer memory was something you could hold: tiny rings of ferrite, threaded by hand. Built on the metal.</p>
 </section>
 
+<section id="generator" style="width: 100%; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 13px; letter-spacing: 0.28em; color: #FFC400">CORE MEMORY GENERATOR</span>
+<h2 style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 28px">Store your name in ferrite.</h2>
+<p style="margin: 0; max-width: 40rem; font-size: 15px; line-height: 1.7; color: #A7AEB8">Every letter becomes 8 bits. Every bit becomes a ring, magnetised one way (1) or the other (0), exactly how core memory stored data in 1953.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start">
+<div style="flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<label for="cm-input" style="font-size: 12px; letter-spacing: 0.2em; color: #A7AEB8">YOUR TEXT (UP TO 16 CHARACTERS)</label>
+<input id="cm-input" type="text" maxlength="16" value="FERRITE" autocomplete="off" spellcheck="false" style="min-height: 52px; padding: 0 16px; background: #0E1216; border: 1px solid #3A414B; color: #EDEAE3; font-family: 'IBM Plex Mono', monospace; font-size: 20px; outline-color: #FFC400">
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<button id="cm-download" type="button" style="min-height: 48px; padding: 0 22px; border: 0; background: #FFC400; color: #07090B; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 14px; letter-spacing: 0.1em; cursor: pointer">DOWNLOAD PNG</button>
+<a id="cm-share" href="https://x.com/intent/post" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; min-height: 48px; padding: 0 22px; border: 1px solid #EDEAE3; text-decoration: none; font-size: 14px; letter-spacing: 0.1em">POST TO X ↗</a>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 1.6; color: #A7AEB8">Download the image, then attach it to your post.</p>
+<div id="cm-bits" style="font-size: 13px; line-height: 1.7; color: #A7AEB8; overflow-wrap: anywhere"></div>
+</div>
+<div style="flex: 1 1 420px; min-width: 0; max-width: 560px">
+<canvas id="cm-canvas" width="1080" height="1080" role="img" aria-label="Your text stored as a grid of ferrite memory rings" style="width: 100%; height: auto; display: block; border: 1px solid #3A414B"></canvas>
+</div>
+</div>
+</section>
+
 <section style="width: 100%; display: flex; flex-direction: column; gap: 28px">
 <h2 style="margin: 0; font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 28px">What is ferrite?</h2>
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px">
@@ -66,5 +89,55 @@ a{color:#EDEAE3}a:hover{color:#FFC400}
 </footer>
 
 </div>
+<script>
+(function(){
+var cv=document.getElementById('cm-canvas'),ctx=cv.getContext('2d'),inp=document.getElementById('cm-input');
+var BG='#07090B',INK='#EDEAE3',ACC='#FFC400',DIM='#3A414B',MUTE='#9AA3AE';
+function clean(s){return (s||'').replace(/[^\x20-\x7E]/g,'').slice(0,16);}
+function draw(){
+ var txt=clean(inp.value)||'FERRITE';
+ var W=1080,H=1080; ctx.fillStyle=BG; ctx.fillRect(0,0,W,H);
+ ctx.strokeStyle='rgba(143,167,196,0.08)'; ctx.lineWidth=1;
+ for(var g=0;g<=W;g+=54){ctx.beginPath();ctx.moveTo(g+.5,0);ctx.lineTo(g+.5,H);ctx.stroke();ctx.beginPath();ctx.moveTo(0,g+.5);ctx.lineTo(W,g+.5);ctx.stroke();}
+ ctx.fillStyle=ACC; ctx.font='500 22px "IBM Plex Mono", monospace'; ctx.textBaseline='alphabetic';
+ ctx.fillText('CORE MEMORY · DWG FERR-001',64,84);
+ ctx.fillStyle=MUTE; ctx.textAlign='right'; ctx.fillText(txt.length*8+' BITS',W-64,84); ctx.textAlign='left';
+ var rows=txt.length, top=130, bottom=H-150, left=150, right=W-190;
+ var cell=Math.min((right-left)/8,(bottom-top)/Math.max(rows,1)); cell=Math.min(cell,104);
+ var gw=cell*8, gh=cell*rows, ox=left+((right-left)-gw)/2, oy=top+((bottom-top)-gh)/2;
+ // wires
+ ctx.strokeStyle='rgba(255,196,0,0.35)'; ctx.lineWidth=Math.max(1,cell*0.03);
+ for(var r=0;r<rows;r++){var y=oy+cell*(r+.5);ctx.beginPath();ctx.moveTo(ox-cell*0.4,y);ctx.lineTo(ox+gw+cell*0.4,y);ctx.stroke();}
+ for(var c=0;c<8;c++){var x=ox+cell*(c+.5);ctx.beginPath();ctx.moveTo(x,oy-cell*0.4);ctx.lineTo(x,oy+gh+cell*0.4);ctx.stroke();}
+ var rad=cell*0.30, th=cell*0.13, bits=[];
+ for(var r=0;r<rows;r++){
+  var code=txt.charCodeAt(r), b=('00000000'+code.toString(2)).slice(-8); bits.push(b);
+  var y=oy+cell*(r+.5);
+  ctx.fillStyle=INK; ctx.font='800 '+Math.round(cell*0.42)+'px "Archivo", sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.fillText(txt[r]===' '?'·':txt[r],ox-cell*0.6,y);
+  ctx.fillStyle=MUTE; ctx.font='400 '+Math.round(cell*0.2)+'px "IBM Plex Mono", monospace'; ctx.textAlign='left';
+  ctx.fillText(b,ox+gw+cell*0.55,y);
+  for(var c=0;c<8;c++){
+   var x=ox+cell*(c+.5), on=b[c]==='1';
+   ctx.save(); ctx.translate(x,y); ctx.rotate(on?Math.PI/4:-Math.PI/4);
+   ctx.beginPath(); ctx.ellipse(0,0,rad,rad*0.72,0,0,Math.PI*2);
+   ctx.lineWidth=th; ctx.strokeStyle=on?ACC:DIM; ctx.stroke(); ctx.restore();
+  }
+ }
+ ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+ ctx.fillStyle=INK; ctx.font='900 46px "Archivo", sans-serif'; ctx.fillText('FERRITE',64,H-64);
+ ctx.fillStyle=ACC; ctx.font='600 24px "IBM Plex Mono", monospace'; ctx.textAlign='right'; ctx.fillText('$FERR · FERRITECORE.XYZ',W-64,H-72); ctx.textAlign='left';
+ document.getElementById('cm-bits').textContent=bits.join(' ');
+ var msg='I stored "'+txt+'" in core memory. '+(txt.length*8)+' rings of ferrite.\n\n$FERR · ferritecore.xyz';
+ document.getElementById('cm-share').href='https://x.com/intent/post?text='+encodeURIComponent(msg);
+}
+inp.addEventListener('input',draw);
+document.getElementById('cm-download').addEventListener('click',function(){
+ var a=document.createElement('a'); a.download='ferrite-core-'+(clean(inp.value)||'FERRITE').replace(/[^A-Za-z0-9]+/g,'-')+'.png';
+ a.href=cv.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove();
+});
+draw(); if(document.fonts&&document.fonts.ready){document.fonts.ready.then(draw);}
+})();
+</script>
 </body>
 </html>
